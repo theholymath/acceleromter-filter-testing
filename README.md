@@ -1,4 +1,4 @@
-# acceleromters
+# accelerometers
 The is code to test filters on phone accelerometer data and to visualize the data.
 
 ## accelerometer-filter-testing.py 
