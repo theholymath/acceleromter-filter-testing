@@ -104,10 +104,12 @@ def marcs_processing_HPF(data):
 
 def pitch_calc(data):
     # return in degrees
-    return np.arctan(data[0]/np.sqrt(data[1]**2 + data[2]**2))*180.0/np.pi
+    return np.arctan(data[0]/np.sqrt(data[1]**2 + data[2]**2))
 def roll_calc(data):
     # return in degrees
-    return np.arctan(data[1]/np.sqrt(data[0]**2 + data[2]**2))*180.0/np.pi
+    return np.arctan(data[1]/np.sqrt(data[0]**2 + data[2]**2))
+def nutation_calc(pitch,roll):
+    return np.arccos(np.cos(pitch)*np.cos(roll))
 ### make connection with phone 
 host = ''
 port = 5555
@@ -174,11 +176,12 @@ if (test == 0):
     t_line = ax3.plot(G)[0]
 else:
     ax3.set_ylim([-180,180])
-    ax3.set_title("pitch and roll Angles")
+    ax3.set_title("nutation, pitch and roll angles")
     ax3.set_ylabel("degrees",fontsize=18)
     ax3.axhline(y=0.0, xmin=0, xmax=1,c="black",linewidth=0.5,zorder=0,label='zero degrees')
-    pitch_line = ax3.plot(G,label='pitch',c='green')[0]
-    roll_line  = ax3.plot(G,label='roll',c='red')[0]
+    pitch_line    = ax3.plot(G,label='pitch',c='green')[0]
+    roll_line     = ax3.plot(G,label='roll',c='red')[0]
+    nutation_line = ax3.plot(G,label='nutation',c='yellow')[0]
     legend = ax3.legend(loc='lower left', shadow=True)
 
 fig.suptitle('Three-axis accelerometer streamed from Sensorstream',fontsize=18)
@@ -225,9 +228,11 @@ while 1:
     #acc_z_savgol = savgol_filter(Az, window_length=5, polyorder=3)
     
     data = np.vstack([Ay,Ax,Az]) # need to get right axes in right places
-    pitch = pitch_calc(data)
-    roll  = roll_calc(data)
-    
+    pitch    = pitch_calc(data)
+    roll     = roll_calc(data)
+    nutation = nutation_calc(pitch,roll)*180.0/np.pi
+    pitch = pitch*180.0/np.pi
+    roll = roll*180.0/np.pi
 #    tilt_angles = []
 #    for i,val in enumerate(G): 
 #        if (val == 0):
@@ -262,7 +267,9 @@ while 1:
         pitch_line.set_xdata(x)
         pitch_line.set_ydata(pitch)
         roll_line.set_xdata(x)
-        roll_line.set_ydata(roll)    #ax3.set_xlim(count, count+50)
+        roll_line.set_ydata(roll)
+        nutation_line.set_xdata(x)
+        nutation_line.set_ydata(nutation)
     
     # Drawing three graphs really slows it down. 
     # if you do one axis and one graph it can handle 
@@ -285,6 +292,7 @@ while 1:
     else:
         ax3.draw_artist(pitch_line)
         ax3.draw_artist(roll_line)
+        ax3.draw_artist(nutation_line)
     
     fig.canvas.blit(ax.bbox)
     fig.canvas.blit(ax2.bbox)
